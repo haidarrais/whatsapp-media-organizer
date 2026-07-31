@@ -54,7 +54,7 @@ jobs:
           fi
 
       - name: Build with PyInstaller
-        run: pyinstaller ${{ matrix.pyinstaller_args }} --name WhatsAppMediaOrganizer --clean --log-level WARN src/whatsapp_media_organizer/${{ matrix.entrypoint }}.py
+        run: pyinstaller ${{ matrix.pyinstaller_args }} --name WhatsAppMediaOrganizer --clean --log-level WARN --paths src src/whatsapp_media_organizer/__${{ matrix.entrypoint }}_app__.py
 
       - name: Prepare release artifact
         shell: bash
