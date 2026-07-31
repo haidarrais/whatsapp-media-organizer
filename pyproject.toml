@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "whatsapp-media-organizer"
+version = "0.1.0"
+description = "Sort WhatsApp media files into a YYYY/MM/DD folder tree — CLI and GUI."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["whatsapp", "media", "organizer", "file-management", "sort"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: MacOS X",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Utilities",
+]
+authors = [{ name = "WhatsApp Media Organizer contributors" }]
+
+[project.urls]
+Homepage = "https://github.com/OWNER/whatsapp-media-organizer"
+Repository = "https://github.com/OWNER/whatsapp-media-organizer"
+Issues = "https://github.com/OWNER/whatsapp-media-organizer/issues"
+
+[project.scripts]
+whatsapp-media-organizer = "whatsapp_media_organizer.cli:main"
+
+[project.optional-dependencies]
+test = ["pytest>=7.4"]
+build = ["pyinstaller>=6.6"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+ignore = ["E731"]
+
+[tool.mypy]
+python_version = "3.9"
+files = ["src"]
+strict = true
+
+[[tool.mypy.overrides]]
+# tkinter ships without stubs; treat it as untyped for the GUI module.
+module = "tkinter.*"
+ignore_missing_imports = true
