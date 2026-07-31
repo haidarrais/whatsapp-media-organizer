@@ -1,9 +1,13 @@
 """Unit tests for whatsapp_media_organizer.core."""
 
+import zipfile
+
 import pytest
 
 from whatsapp_media_organizer.core import (
+    extract_archive,
     extract_date,
+    is_archive,
     is_valid_date,
     organize_whatsapp_media,
     unique_destination,
@@ -168,6 +172,192 @@ class TestOrganizeWhatsappMedia:
         assert result.moved == 0
         assert len(result.errors) == 1
         assert "IMG-20231026-WA0001.jpg" in result.errors[0]
+
+class TestIsArchive:
+    @pytest.mark.parametrize(
+        "filename",
+        [
+            "media.zip",
+            "WhatsApp.zip",
+            "archive.ZIP",
+        ],
+    )
+    def test_detects_archives(self, filename):
+        assert is_archive(filename)
+
+    @pytest.mark.parametrize(
+        "filename",
+        [
+            "media.zipx",
+            "IMG-20231026-WA0001.jpg",
+            "WhatsApp Video 2024-11-30 at 08.00.00.mp4",
+            "archive.tar.gz",
+        ],
+    )
+    def test_rejects_non_archives(self, filename):
+        assert not is_archive(filename)
+
+
+class TestExtractArchive:
+    def _make_zip(self, tmp_path, name, members):
+        path = tmp_path / name
+        with zipfile.ZipFile(path, "w") as zf:
+            for member_name, content in members:
+                zf.writestr(member_name, content)
+        return path
+
+    def test_extracts_all_members(self, tmp_path):
+        archive = self._make_zip(
+            tmp_path,
+            "media.zip",
+            [
+                ("IMG-20231026-WA0001.jpg", "a"),
+                ("WhatsApp Image 2025-07-09 at 13.52.37.jpeg", "b"),
+            ],
+        )
+        out = tmp_path / "out"
+        out.mkdir()
+
+        extracted = extract_archive(archive, out)
+
+        assert set(extracted) == {
+            out / "IMG-20231026-WA0001.jpg",
+            out / "WhatsApp Image 2025-07-09 at 13.52.37.jpeg",
+        }
+        assert (out / "IMG-20231026-WA0001.jpg").read_text() == "a"
+        assert (out / "WhatsApp Image 2025-07-09 at 13.52.37.jpeg").read_text() == "b"
+
+    def test_does_not_escape_staging_directory(self, tmp_path):
+        archive = self._make_zip(
+            tmp_path,
+            "evil.zip",
+            [
+                ("../../outside.txt", "nope"),
+                ("/tmp/absolute.txt", "nope"),
+                ("..\\windows-style.txt", "nope"),
+            ],
+        )
+        out = tmp_path / "out"
+        out.mkdir()
+
+        extracted = extract_archive(archive, out)
+
+        assert len(extracted) == 3
+        assert (tmp_path / "outside.txt").exists() is False
+        assert (tmp_path / "absolute.txt").exists() is False
+        assert (tmp_path / "windows-style.txt").exists() is False
+        for path in extracted:
+            assert str(path).startswith(str(out))
+
+
+class TestOrganizeArchives:
+    def _make_zip(self, tmp_path, name, members):
+        path = tmp_path / name
+        with zipfile.ZipFile(path, "w") as zf:
+            for member_name, content in members:
+                zf.writestr(member_name, content)
+        return path
+
+    def test_extracts_and_sorts_archive_contents(self, tmp_path):
+        src = tmp_path / "source"
+        src.mkdir()
+        archive = self._make_zip(
+            src,
+            "media.zip",
+            [
+                ("WhatsApp Image 2025-07-09 at 13.52.37.jpeg", "a"),
+                ("IMG-20231026-WA0001.jpg", "b"),
+                ("WhatsApp Video 2024-11-30 at 08.00.00.mp4", "c"),
+            ],
+        )
+        dest = tmp_path / "dest"
+        logs = []
+
+        result = organize_whatsapp_media(src, dest, logs.append)
+
+        assert result.moved == 3
+        assert result.archives == 1
+        assert (
+            dest / "2025" / "07" / "09" / "WhatsApp Image 2025-07-09 at 13.52.37.jpeg"
+        ).is_file()
+        assert (dest / "2023" / "10" / "26" / "IMG-20231026-WA0001.jpg").is_file()
+        assert (
+            dest / "2024" / "11" / "30" / "WhatsApp Video 2024-11-30 at 08.00.00.mp4"
+        ).is_file()
+        assert not archive.exists()
+        assert not any(log.startswith("Error") for log in logs)
+
+    def test_archive_kept_when_member_fails_to_move(self, tmp_path, monkeypatch):
+        src = tmp_path / "source"
+        src.mkdir()
+        archive = self._make_zip(
+            src,
+            "media.zip",
+            [
+                ("IMG-20231026-WA0001.jpg", "a"),
+                ("WhatsApp Image 2025-07-09 at 13.52.37.jpeg", "b"),
+            ],
+        )
+        dest = tmp_path / "dest"
+
+        import shutil
+
+        def broken_move(_src, _dst):
+            raise OSError("disk full")
+
+        monkeypatch.setattr(shutil, "move", broken_move)
+        logs = []
+        result = organize_whatsapp_media(src, dest, logs.append)
+
+        assert result.moved == 0
+        assert len(result.errors) == 2
+        assert archive.exists()
+        assert any("Kept archive" in message for message in logs)
+
+    def test_archive_kept_when_member_unrecognized(self, tmp_path):
+        src = tmp_path / "source"
+        src.mkdir()
+        archive = self._make_zip(
+            src,
+            "media.zip",
+            [
+                ("IMG-20231026-WA0001.jpg", "a"),
+                ("notes.txt", "b"),
+            ],
+        )
+        dest = tmp_path / "dest"
+
+        result = organize_whatsapp_media(src, dest)
+
+        assert result.moved == 1
+        assert result.unrecognized == 1
+        assert archive.exists()
+        assert (dest / "2023" / "10" / "26" / "IMG-20231026-WA0001.jpg").is_file()
+
+    def test_archive_kept_when_corrupt(self, tmp_path):
+        src = tmp_path / "source"
+        src.mkdir()
+        archive = src / "broken.zip"
+        archive.write_bytes(b"this is not a real zip")
+        dest = tmp_path / "dest"
+
+        result = organize_whatsapp_media(src, dest)
+
+        assert len(result.errors) == 1
+        assert "broken.zip" in result.errors[0]
+        assert archive.exists()
+
+    def test_no_extract_leaves_archive_untouched(self, tmp_path):
+        src = tmp_path / "source"
+        src.mkdir()
+        archive = self._make_zip(src, "media.zip", [("IMG-20231026-WA0001.jpg", "a")])
+        dest = tmp_path / "dest"
+
+        result = organize_whatsapp_media(src, dest, extract_archives=False)
+
+        assert result.moved == 0
+        assert result.archives == 0
+        assert archive.exists()
 
     def test_counts_only_files(self, tmp_path):
         src = tmp_path / "source"

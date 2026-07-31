@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 from whatsapp_media_organizer.cli import build_parser
@@ -40,6 +41,52 @@ def test_cli_e2e_moves_file(tmp_path):
     assert proc.returncode == 0
     assert (dest / "2023" / "10" / "26" / "IMG-20231026-WA0001.jpg").is_file()
     assert "Moved: IMG-20231026-WA0001.jpg" in proc.stdout
+
+
+def test_cli_extracts_and_sorts_zip(tmp_path):
+    src = tmp_path / "source"
+    src.mkdir()
+    archive = src / "media.zip"
+    with zipfile.ZipFile(archive, "w") as zf:
+        zf.writestr("IMG-20231026-WA0001.jpg", "x")
+    dest = tmp_path / "dest"
+
+    proc = _run_cli("--source", str(src), "--dest", str(dest))
+
+    assert proc.returncode == 0
+    assert (dest / "2023" / "10" / "26" / "IMG-20231026-WA0001.jpg").is_file()
+    assert not archive.exists()
+    assert "Deleted archive: media.zip" in proc.stdout
+
+
+def test_cli_no_extract_leaves_zip_untouched(tmp_path):
+    src = tmp_path / "source"
+    src.mkdir()
+    archive = src / "media.zip"
+    with zipfile.ZipFile(archive, "w") as zf:
+        zf.writestr("IMG-20231026-WA0001.jpg", "x")
+    dest = tmp_path / "dest"
+
+    proc = _run_cli("--source", str(src), "--dest", str(dest), "--no-extract")
+
+    assert proc.returncode == 0
+    assert archive.exists()
+    assert not (dest / "2023" / "10" / "26").exists()
+
+
+def test_cli_dry_run_reports_zip_contents(tmp_path):
+    src = tmp_path / "source"
+    src.mkdir()
+    archive = src / "media.zip"
+    with zipfile.ZipFile(archive, "w") as zf:
+        zf.writestr("IMG-20231026-WA0001.jpg", "x")
+    dest = tmp_path / "dest"
+
+    proc = _run_cli("--source", str(src), "--dest", str(dest), "--dry-run")
+
+    assert proc.returncode == 0
+    assert archive.exists()
+    assert "would move : media.zip :: IMG-20231026-WA0001.jpg -> 2023/10/26/" in proc.stdout
 
 
 def test_cli_dry_run_leaves_files_in_place(tmp_path):

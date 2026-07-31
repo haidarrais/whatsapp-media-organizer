@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import tempfile
 from pathlib import Path
 
 from .core import organize_whatsapp_media
@@ -52,6 +53,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show what would be moved without touching the filesystem.",
     )
     parser.add_argument(
+        "--no-extract",
+        action="store_true",
+        help=(
+            "Leave compressed archives (e.g. .zip) untouched instead of "
+            "extracting and sorting their contents."
+        ),
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
@@ -59,12 +68,37 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _dry_run(source: Path) -> int:
-    from .core import extract_date, is_valid_date
+def _dry_run(source: Path, extract_archives: bool = True) -> int:
+    import zipfile
+
+    from .core import extract_archive, extract_date, is_archive, is_valid_date
 
     total = moved = 0
-    for item in sorted(source.iterdir()):
-        if not item.is_file():
+    for item in sorted(item for item in source.iterdir() if item.is_file()):
+        if is_archive(item.name):
+            if not extract_archives:
+                print(f"would skip : {item.name} (--no-extract)")
+                continue
+            total += 1
+            try:
+                with tempfile.TemporaryDirectory(prefix="whatsapp-media-") as temp_dir:
+                    staged = extract_archive(item, Path(temp_dir))
+                    for staged_file in sorted(staged):
+                        date = extract_date(staged_file.name)
+                        if date is None or not is_valid_date(*date):
+                            print(
+                                f"would skip : {item.name} :: {staged_file.name} "
+                                "(unrecognized format)"
+                            )
+                            continue
+                        year, month, day = date
+                        moved += 1
+                        print(
+                            f"would move : {item.name} :: {staged_file.name} "
+                            f"-> {year}/{month}/{day}/"
+                        )
+            except (OSError, zipfile.BadZipFile) as exc:
+                print(f"would skip : {item.name} (error reading archive: {exc})")
             continue
         total += 1
         date = extract_date(item.name)
@@ -92,12 +126,18 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if args.dry_run:
-        return _dry_run(source)
+        return _dry_run(source, extract_archives=not args.no_extract)
 
     def log(message: str) -> None:
         print(message)
 
-    result = organize_whatsapp_media(source, dest, log, resolve_collisions=not args.no_rename)
+    result = organize_whatsapp_media(
+        source,
+        dest,
+        log,
+        resolve_collisions=not args.no_rename,
+        extract_archives=not args.no_extract,
+    )
 
     for error in result.errors:
         print(f"error: {error}", file=sys.stderr)

@@ -25,6 +25,8 @@ WhatsApp files use two naming formats; both are recognized:
 
 - Sorts into `YYYY/MM/DD` folders from the date embedded in each filename
 - Handles both WhatsApp naming formats automatically
+- Extracts compressed `.zip` archives (e.g. WhatsApp Web/Desktop bulk downloads)
+  and sorts their contents too
 - `--dry-run` preview mode — see what would move before moving anything
 - Collision handling: renames duplicates (e.g. `photo_1.jpg`), or skips with `--no-rename`
 - Skips files with unrecognized names or impossible dates without touching them
@@ -65,6 +67,7 @@ Options:
 | `-s, --source` | Directory containing the WhatsApp media files (**required**) |
 | `-d, --dest` | Destination root (default: `~/Desktop/sorted_media`) |
 | `--no-rename` | Skip files that would overwrite an existing target instead of renaming |
+| `--no-extract` | Leave compressed archives (e.g. `.zip`) untouched instead of extracting and sorting their contents |
 | `--dry-run` | Show what would be moved without touching the filesystem |
 | `--version` | Print the version and exit |
 
@@ -98,11 +101,14 @@ print(f"Moved {result.moved} of {result.total} files.")
 ## How it works
 
 1. Every file in the source folder is checked against known WhatsApp naming
-   patterns.
+   patterns. Compressed `.zip` archives (from WhatsApp Web/Desktop bulk
+   downloads) are extracted first and their contents checked the same way.
 2. The embedded date is validated (impossible dates like `02/30` are rejected).
 3. Files are moved to `DEST/YYYY/MM/DD/`, creating folders as needed.
 4. If a target already exists, a numeric suffix is appended (`_1`, `_2`, …)
    unless `--no-rename` is set.
+5. An archive is deleted after its contents are sorted; it is left in place if
+   anything inside it could not be organized.
 
 ## Development
 
