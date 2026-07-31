@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build binary (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: whatsapp-media-organizer-windows
+            pyinstaller_args: --onefile --noconsole
+            entrypoint: gui
+          - os: macos-latest
+            artifact: whatsapp-media-organizer-macos
+            pyinstaller_args: --onefile --windowed
+            entrypoint: gui
+          - os: ubuntu-latest
+            artifact: whatsapp-media-organizer-linux
+            pyinstaller_args: --onefile --noconsole
+            entrypoint: cli
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install PyInstaller
+        run: python -m pip install pyinstaller
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Determine binary name
+        shell: bash
+        id: names
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            echo "binary_name=WhatsAppMediaOrganizer.exe" >> "$GITHUB_OUTPUT"
+          else
+            echo "binary_name=WhatsAppMediaOrganizer" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build with PyInstaller
+        run: pyinstaller ${{ matrix.pyinstaller_args }} --name WhatsAppMediaOrganizer --clean --log-level WARN src/whatsapp_media_organizer/${{ matrix.entrypoint }}.py
+
+      - name: Prepare release artifact
+        shell: bash
+        run: |
+          mkdir -p release
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            mv dist/WhatsAppMediaOrganizer.exe release/
+          else
+            mv dist/WhatsAppMediaOrganizer release/
+          fi
+          cd release
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            mv WhatsAppMediaOrganizer WhatsAppMediaOrganizer-macOS
+            hdiutil create -volname "WhatsAppMediaOrganizer" -srcfolder . -ov -format UDZO ../whatsapp-media-organizer-macos.dmg
+          elif [ "${{ matrix.os }}" = "windows-latest" ]; then
+            mv WhatsAppMediaOrganizer.exe WhatsAppMediaOrganizer-Windows.exe
+          else
+            mv WhatsAppMediaOrganizer WhatsAppMediaOrganizer-Linux
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: release/*
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Tag name
+        id: tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          files: |
+            artifacts/whatsapp-media-organizer-windows/*
+            artifacts/whatsapp-media-organizer-macos/*
+            artifacts/whatsapp-media-organizer-linux/*
+          generate_release_notes: true

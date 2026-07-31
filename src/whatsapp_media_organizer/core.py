@@ -11,7 +11,7 @@ import re
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Optional, Pattern
+from typing import Callable, Optional
 
 # WhatsApp legacy short format: IMG-20231026-WA0001.jpg
 _REGEX_SHORT = re.compile(r"^(?:IMG|VID|PTT)-(\d{4})(\d{2})(\d{2})-WA")
@@ -51,18 +51,22 @@ def extract_date(filename: str) -> Optional[tuple[str, str, str]]:
 def is_valid_date(year: str, month: str, day: str) -> bool:
     """Return True when ``year``/``month``/``day`` form a real calendar date."""
     try:
-        _ = int(year)
+        year_int = int(year)
         month_int = int(month)
         day_int = int(day)
     except ValueError:
         return False
     if not 1 <= month_int <= 12:
         return False
-    if not 1 <= day_int <= 31:
+    # Days in each month for non-leap year; Feb+1 in leap years later
+    max_days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    max_day_for_month = max_days[month_int - 1]
+    # Leap year check: divisible by 4, except centuries not divisible by 400
+    if month_int == 2 and day_int > 29:
         return False
-    # Quick sanity check without pulling in the calendar module: reject 2/30,
-    # 4/31, 6/31, 9/31, 11/31-style impossibilities.
-    if day_int > 30 and month_int in (2, 4, 6, 9, 11):
+    if month_int == 2 and ((year_int % 4 == 0 and year_int % 100 != 0) or year_int % 400 == 0):
+        max_day_for_month = 29
+    if not 1 <= day_int <= max_day_for_month:
         return False
     return True
 

@@ -123,7 +123,7 @@ class WhatsAppMediaOrganizerApp:
 
 def main() -> None:
     root = tk.Tk()
-    app = WhatsAppMediaOrganizerApp(root)
+    WhatsAppMediaOrganizerApp(root)
     root.mainloop()
 
 

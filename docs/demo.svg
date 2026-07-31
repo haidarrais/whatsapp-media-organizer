@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="400" viewBox="0 0 720 400" font-family="-apple-system, 'Segoe UI', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#eef2f7"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="400" rx="12" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="360" y="38" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">WhatsApp Media Organizer</text>
+  <text x="360" y="60" text-anchor="middle" font-size="12" fill="#64748b">Automatically sorts your media into a YYYY / MM / DD folder tree</text>
+
+  <!-- Source box -->
+  <rect x="24" y="84" width="300" height="210" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="24" y="84" width="300" height="34" rx="10" fill="#f1f5f9"/>
+  <rect x="24" y="108" width="300" height="10" fill="#f1f5f9"/>
+  <text x="40" y="105" font-size="13" font-weight="700" fill="#334155">WhatsApp Download Folder</text>
+
+  <g font-size="11.5" fill="#475569">
+    <text x="40" y="146">IMG-20231026-WA0001.jpg</text>
+    <text x="40" y="170">VID-20231026-WA0002.mp4</text>
+    <text x="40" y="194">WhatsApp Image 2025-07-09 at 13.52.37.jpeg</text>
+    <text x="40" y="218">IMG-20250514-WA0003.jpg</text>
+    <text x="40" y="242">PTT-20231026-WA0004.opus</text>
+    <text x="40" y="266">notes.txt</text>
+  </g>
+
+  <!-- Arrow -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0d9488"/>
+    </marker>
+  </defs>
+  <line x1="330" y1="200" x2="388" y2="200" stroke="url(#arrow)" stroke-width="3.5" marker-end="url(#arrowhead)"/>
+  <text x="359" y="186" text-anchor="middle" font-size="11" font-weight="600" fill="#0d9488">auto-sort</text>
+
+  <!-- Destination box -->
+  <rect x="396" y="84" width="300" height="210" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="396" y="84" width="300" height="34" rx="10" fill="#ecfdf5"/>
+  <rect x="396" y="108" width="300" height="10" fill="#ecfdf5"/>
+  <text x="412" y="105" font-size="13" font-weight="700" fill="#047857">sorted_media/</text>
+
+  <g font-size="11.5" fill="#475569">
+    <text x="412" y="140">&#9672; 2023/</text>
+    <text x="428" y="158">&#9492;&#9472; 10/</text>
+    <text x="444" y="176">&#9492;&#9472; 26/</text>
+    <text x="460" y="194">IMG-20231026-WA0001.jpg</text>
+    <text x="460" y="212">VID-20231026-WA0002.mp4</text>
+    <text x="460" y="230">PTT-20231026-WA0004.opus</text>
+    <text x="412" y="258">&#9672; 2025/</text>
+    <text x="428" y="276">&#9492;&#9472; 07/</text>
+    <text x="444" y="294">&#9492;&#9472; 09/</text>
+  </g>
+
+  <!-- Summary bar -->
+  <rect x="24" y="318" width="672" height="58" rx="10" fill="#0f172a"/>
+  <g font-size="12.5" fill="#cbd5e1">
+    <text x="48" y="345">&#9679; 5 of 6 files moved</text>
+    <text x="48" y="364">&#9888; notes.txt skipped — unrecognized format</text>
+    <text x="390" y="345" font-weight="700" fill="#34d399">&#10003; Done in 0.2s</text>
+    <text x="390" y="364">No third-party dependencies</text>
+  </g>
+</svg>
