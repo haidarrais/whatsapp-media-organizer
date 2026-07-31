@@ -1,7 +1,7 @@
 # WhatsApp Media Organizer
 
-[![CI](https://github.com/OWNER/whatsapp-media-organizer/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/whatsapp-media-organizer/actions)
-[![Release](https://github.com/OWNER/whatsapp-media-organizer/actions/workflows/release.yml/badge.svg)](https://github.com/OWNER/whatsapp-media-organizer/releases)
+[![CI](https://github.com/haidarrais/whatsapp-media-organizer/actions/workflows/ci.yml/badge.svg)](https://github.com/haidarrais/whatsapp-media-organizer/actions)
+[![Release](https://github.com/haidarrais/whatsapp-media-organizer/actions/workflows/release.yml/badge.svg)](https://github.com/haidarrais/whatsapp-media-organizer/releases)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
@@ -38,7 +38,7 @@ WhatsApp files use two naming formats; both are recognized:
 ### Option 1: Pre-built binaries (recommended)
 
 Grab the latest release for your platform from the
-[Releases page](https://github.com/OWNER/whatsapp-media-organizer/releases):
+[Releases page](https://github.com/haidarrais/whatsapp-media-organizer/releases):
 
 - **Windows** → `WhatsAppMediaOrganizer-Windows.exe` (double-click to launch the GUI)
 - **macOS** → `WhatsAppMediaOrganizer-macOS` (DMG) — right-click → Open to bypass Gatekeeper on first run
@@ -47,7 +47,7 @@ Grab the latest release for your platform from the
 ### Option 2: Install from source with pip
 
 ```bash
-python -m pip install git+https://github.com/OWNER/whatsapp-media-organizer.git
+python -m pip install git+https://github.com/haidarrais/whatsapp-media-organizer.git
 ```
 
 ## Usage
