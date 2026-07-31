@@ -1,7 +1,7 @@
 # WhatsApp Media Organizer
 
-[![CI](https://github.com/OWNER/whatsapp-media-organizer/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/whatsapp-media-organizer/actions/workflows/ci.yml)
-[![Release](https://github.com/OWNER/whatsapp-media-organizer/actions/workflows/release.yml/badge.svg)](https://github.com/OWNER/whatsapp-media-organizer/actions/workflows/release.yml)
+[![CI](https://github.com/OWNER/whatsapp-media-organizer/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/whatsapp-media-organizer/actions)
+[![Release](https://github.com/OWNER/whatsapp-media-organizer/actions/workflows/release.yml/badge.svg)](https://github.com/OWNER/whatsapp-media-organizer/releases)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
